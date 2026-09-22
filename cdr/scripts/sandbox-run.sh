@@ -104,7 +104,7 @@ bwrap \
     --bind "$ABS_REPORTS_DIR" "$PROJECT_ROOT/output/reports" \
     --bind "$ABS_QUARANTINE_DIR" "$PROJECT_ROOT/output/quarantine" \
     --chdir "$PROJECT_ROOT" \
-    java -cp "$CLASSPATH" Main "/tmp/sandbox/input/$INPUT_FILENAME" "/tmp/sandbox/output/$OUTPUT_FILENAME"
+    java -Djava.awt.headless=true -cp "$CLASSPATH" Main "/tmp/sandbox/input/$INPUT_FILENAME" "/tmp/sandbox/output/$OUTPUT_FILENAME"
 
 EXIT_CODE=$?
 
