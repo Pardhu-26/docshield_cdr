@@ -5,6 +5,7 @@ import threat.common.FindingClassification;
 import threat.common.SecurityFinding;
 import threat.common.ThreatType;
 
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -16,13 +17,19 @@ public class RTFThreatAnalyzerTest {
 
     @Test
     void detectsEmbeddedObjectInSampleRtf() throws Exception {
-        Path sample = Path.of("samples/test_embedded_object.rtf");
-        List<SecurityFinding> findings = analyzer.analyze(sample);
+        String rtf = "{\\rtf1\\ansi{\\object\\objemb\\objclass Package{\\*\\objdata 0105000000000000}}}";
+        Path sample = Files.createTempFile("docshield-embedded-", ".rtf");
+        try {
+            Files.writeString(sample, rtf);
+            List<SecurityFinding> findings = analyzer.analyze(sample);
 
-        assertFalse(findings.isEmpty());
-        assertTrue(findings.stream().anyMatch(f ->
-                f.getClassification() == FindingClassification.THREAT &&
-                (f.getType() == ThreatType.EMBEDDED_OBJECT || f.getType() == ThreatType.EMBEDDED_ACTIVE_CONTENT)));
+            assertFalse(findings.isEmpty());
+            assertTrue(findings.stream().anyMatch(f ->
+                    f.getClassification() == FindingClassification.THREAT &&
+                    (f.getType() == ThreatType.EMBEDDED_OBJECT || f.getType() == ThreatType.EMBEDDED_ACTIVE_CONTENT)));
+        } finally {
+            Files.deleteIfExists(sample);
+        }
     }
 
     @Test
@@ -86,10 +93,8 @@ public class RTFThreatAnalyzerTest {
     }
 
     @Test
-    void cleanSampleRtfProducesNoBlockingFindings() throws Exception {
-        Path cleanSample = Path.of("samples/file-sample_100kB.rtf");
-        List<SecurityFinding> findings = analyzer.analyze(cleanSample);
-
+    void cleanSampleRtfProducesNoBlockingFindings() {
+        List<SecurityFinding> findings = analyzer.analyze("{\\rtf1\\ansi This is a clean DocShield test fixture.}");
         assertFalse(findings.stream().anyMatch(f ->
                 f.getClassification() == FindingClassification.THREAT ||
                 f.getClassification() == FindingClassification.POLICY_VIOLATION));
