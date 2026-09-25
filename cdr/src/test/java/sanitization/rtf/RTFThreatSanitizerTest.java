@@ -17,9 +17,8 @@ public class RTFThreatSanitizerTest {
     private final RTFThreatAnalyzer analyzer = new RTFThreatAnalyzer();
 
     @Test
-    void disarmsEmbeddedObjectInSampleFile() throws Exception {
-        Path sample = Path.of("samples/test_embedded_object.rtf");
-        String original = Files.readString(sample);
+    void disarmsEmbeddedObjectInSampleFile() {
+        String original = "{\\rtf1\\ansi{\\object\\objemb\\objclass Package{\\*\\objdata 0105000000000000}}}";
         List<SecurityFinding> findings = analyzer.analyze(original);
 
         RTFThreatSanitizer.SanitizationResult result = sanitizer.sanitize(original, findings);
