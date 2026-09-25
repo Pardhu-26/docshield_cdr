@@ -10,7 +10,7 @@ This directory contains the root source tree of DocShield CDR.
 
 ### Command Line Interface
 ```bash
-./run.sh <input-file> <output-file>
+./scripts/sandbox-run.sh <input-file> <output-file>
 ```
 Or directly via Java:
 ```bash
@@ -20,7 +20,7 @@ java -cp "$CLASSPATH" Main <input-file> <output-file>
 ### Exit Codes
 - **`0`**: Successful processing. Either a clean copy was produced (with identical SHA-256) or the document was successfully sanitized, reconstructed, and verified.
 - **`1`**: Operator or command-line usage error (invalid arguments, same input/output path, unreadable file, un-writable destination directory).
-- **`2`**: Quarantine exit. The input file could not be safely identified, contained unremovable threats, failed integrity validation, encountered parser exceptions, or was an unsupported format (e.g. RTF). A timestamped quarantine record is preserved in `output/quarantine/`.
+- **`2`**: Quarantine exit. The input file could not be safely identified, contained unremovable threats, failed integrity validation, encountered parser exceptions, or was an unsupported format. A timestamped quarantine record is preserved in `output/quarantine/`.
 
 ---
 

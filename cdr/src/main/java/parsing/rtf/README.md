@@ -4,26 +4,10 @@ The `parsing.rtf` package contains a custom lexical parser for Rich Text Format 
 
 ---
 
-## 1. Current Release Status: CDR Deferred & Quarantined
+## 1. Current Release Status: RTF CDR Integrated
 
 > [!WARNING]
-> **RTF CDR IS NOT ENABLED IN THIS RELEASE.**
-> While this package provides lexical and semantic parsing components capable of extracting text, metadata, images, and embedded objects into a `DocumentModel`, **full Content Disarm and Reconstruction (CDR) for RTF is intentionally deferred**.
-> 
-> As enforced in [`Main.java`](file:///d:/CAIR/DOC%20SHIELD/DocShield/cdr/src/main/java/Main.java#L105-L110):
-> ```java
-> if (fileInfo.getFormat() == Format.RTF) {
->     quarantineAndExit(inputFile,
->             "RTF CDR is not enabled in this release.",
->             "RTF is not yet supported for safe disarm/reconstruction — file has been quarantined.");
->     return;
-> }
-> ```
-> RTF files submitted to DocShield are automatically quarantined (exit code `2`) to prevent unsafe passthrough.
-
----
-
-## 2. Parser Components
+> **RTF CDR is enabled in this integrated build.** The parser is used by the RTF threat analyzer and integrity validator. The release path now routes `.rtf` inputs through `RTFCDRProcessor`, which performs threat analysis, sanitization/reconstruction when required, and post-reconstruction validation.
 
 | File | Responsibility |
 |---|---|

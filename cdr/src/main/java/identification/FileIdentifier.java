@@ -190,7 +190,28 @@ public class FileIdentifier {
     }
 
     private boolean isRtf(byte[] header) {
-        return header.length >= 5 && header[0] == '{' && header[1] == '\\' && header[2] == 'r' && header[3] == 't' && header[4] == 'f';
+        if (header == null || header.length < 5) {
+            return false;
+        }
+        int offset = 0;
+        // Allow an optional UTF-8 BOM before the RTF header.
+        if (header.length >= 3
+                && (header[0] & 0xFF) == 0xEF
+                && (header[1] & 0xFF) == 0xBB
+                && (header[2] & 0xFF) == 0xBF) {
+            offset = 3;
+        }
+        while (offset < header.length
+                && (header[offset] == ' ' || header[offset] == '\t'
+                || header[offset] == '\r' || header[offset] == '\n')) {
+            offset++;
+        }
+        return header.length - offset >= 5
+                && header[offset] == '{'
+                && header[offset + 1] == '\\'
+                && header[offset + 2] == 'r'
+                && header[offset + 3] == 't'
+                && header[offset + 4] == 'f';
     }
 
     private boolean isOle(byte[] header) {

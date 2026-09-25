@@ -17,7 +17,7 @@ The `security` package provides core security controls and quarantine management
   5. Creates an atomic temporary file in the quarantine directory, copies the source file with attributes preserved (`StandardCopyOption.COPY_ATTRIBUTES`), and performs an atomic move (`StandardCopyOption.ATOMIC_MOVE`) to `<prefix>.quarantined`.
   6. Computes the SHA-256 cryptographic digest of the quarantined file.
   7. Writes a companion diagnostic metadata file `<prefix>.quarantined.txt` recording the original absolute path, SHA-256 hash, and sanitized reason for quarantine.
-- **Used by**: [`Main.java`](file:///D:/CAIR/DOC%20SHIELD/DocShield/cdr/src/main/java/Main.java) on format detection errors, extension spoofing, unremovable threats, integrity failures, empty input files, unsupported formats (such as RTF), or processing exceptions.
+- **Used by**: [`Main.java`](file:///D:/CAIR/DOC%20SHIELD/DocShield/cdr/src/main/java/Main.java) on format detection errors, extension spoofing, unremovable threats, integrity failures, empty input files, unsupported formats, or processing exceptions.
 
 ## Sub-Packages
 

@@ -28,6 +28,6 @@ parsing/
 ├── ppt/                           # Legacy PPT POI parser & PPTToPPTXConverter
 ├── xls/                           # Legacy XLS POI parser & XLSToXLSXConverter
 ├── pdf/                           # PDFBox semantic parser
-├── rtf/                           # Legacy RTF parser (CDR deferred)
+├── rtf/                           # RTF parser used by the RTF CDR pipeline
 └── legacy/                        # Shared sandboxed LibreOffice conversion driver
 ```

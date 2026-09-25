@@ -16,6 +16,7 @@ import processing.docx.DOCXCDRProcessor;
 import processing.pptx.PPTXCDRProcessor;
 import processing.xlsx.XLSXCDRProcessor;
 import processing.pdf.PDFCDRProcessor;
+import processing.rtf.RTFCDRProcessor;
 
 import reporting.ReportWriter;
 import application.UserFacingError;
@@ -31,7 +32,7 @@ public class Main {
     public static void main(String[] args) {
         if (args.length != 2) {
             System.out.println("DocShield: Please provide an input file and an output file.");
-            System.out.println("Usage: ./run.sh <input-file> <output-file>");
+            System.out.println("Usage: ./scripts/sandbox-run.sh <input-file> <output-file>");
             System.exit(1);
         }
 
@@ -95,17 +96,6 @@ public class Main {
             quarantineAndExit(inputFile,
                     "File extension does not match the detected file format.",
                     "File type mismatch — file has been quarantined.");
-            return;
-        }
-
-        // RTF is intentionally outside the current CDR release scope.
-        // It must never fall through to the analysis-only parser and be
-        // presented as a sanitized/released document. Full RTF CDR will be
-        // added as a separate hardening phase.
-        if (fileInfo.getFormat() == Format.RTF) {
-            quarantineAndExit(inputFile,
-                    "RTF CDR is not enabled in this release.",
-                    "RTF is not yet supported for safe disarm/reconstruction — file has been quarantined.");
             return;
         }
 
@@ -275,6 +265,9 @@ public class Main {
 
             case PDF ->
                     new PDFCDRProcessor();
+
+            case RTF ->
+                    new RTFCDRProcessor();
 
             default ->
                     null;

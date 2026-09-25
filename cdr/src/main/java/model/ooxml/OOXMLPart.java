@@ -107,10 +107,18 @@ public class OOXMLPart {
             return false;
         }
 
-        return contentType
+        String normalized = contentType
                 .trim()
-                .toLowerCase()
-                .contains("xml");
+                .toLowerCase(java.util.Locale.ROOT);
+
+        // Do not use contains("xml") here. OOXML package MIME types such as
+        // application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+        // contain the word "xml" but the part itself is a ZIP package, not
+        // an XML document. Treat only actual XML media types as XML parts.
+        return normalized.equals("application/xml")
+                || normalized.equals("text/xml")
+                || normalized.endsWith("+xml")
+                || normalized.endsWith("/xml");
     }
 
 

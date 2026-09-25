@@ -32,10 +32,10 @@ Traditional Antivirus (AV) and Endpoint Detection & Response (EDR) solutions rel
 | **Word 97-2003 Binary Document** | `.doc` | Legacy Binary | Pre-Conversion OLE Analysis → Isolated Sandboxed LibreOffice Conversion → Modern DOCX CDR → Final Verification | **Production Ready** |
 | **PowerPoint 97-2003 Presentation** | `.ppt` | Legacy Binary | Pre-Conversion OLE/Atom Analysis → Isolated Sandboxed LibreOffice Conversion → Modern PPTX CDR → Final Verification | **Production Ready** |
 | **Excel 97-2003 Binary Workbook** | `.xls` | Legacy Binary | Pre-Conversion BIFF8/XLM Analysis → Isolated Sandboxed LibreOffice Conversion → Modern XLSX CDR → Final Verification | **Production Ready** |
-| **Rich Text Format** | `.rtf` | Deferred Format | Lexical and Group-Aware Scanner implemented for inspection; CDR disarm/reconstruction deferred. | **Intentionally Disabled & Quarantined** |
+| **Rich Text Format** | `.rtf` | Modern Text / Native RTF | RTF structural analysis → Threat Analysis → Surgical Disarm → Reconstruction → Re-Read Integrity/Security Verification | **Integrated** |
 
 > [!IMPORTANT]
-> **RTF Scope**: RTF is **not** supported for CDR release in the current version. As enforced in [`Main.java`](file:///d:/CAIR/DOC%20SHIELD/DocShield/cdr/src/main/java/Main.java#L105-L110), any submitted `.rtf` document is immediately intercepted and routed to quarantine with exit code `2`.
+> **RTF Scope**: RTF CDR is now integrated. `.rtf` inputs are routed through `RTFCDRProcessor`, which analyzes embedded objects, DDE, external templates, dangerous hyperlinks and remote include constructs, sanitizes blocking content, and performs post-reconstruction integrity/security validation.
 
 ---
 
@@ -43,11 +43,13 @@ Traditional Antivirus (AV) and Endpoint Detection & Response (EDR) solutions rel
 
 ### Modern Document Pipeline (`DOCX`, `PPTX`, `XLSX`, `PDF`)
 
+RTF inputs use the dedicated `RTFCDRProcessor` path described in the RTF subsystem documentation; they are not routed through the OOXML pipeline.
+
 ```mermaid
 flowchart TD
     A[Input File] --> B[Format Identification & Anti-Spoofing]
     B --> C{Supported & Valid Extension?}
-    C -- No / RTF --> Q[Quarantine & Exit 2]
+    C -- No --> Q[Quarantine & Exit 2]
     C -- Yes --> D[Secure Parsing into In-Memory Model]
     D --> E[Deep Threat Analysis]
     E --> F{Blocking Finding Present?}
@@ -471,7 +473,7 @@ Successful Release (Exit 0)                                         Quarantine T
  • Clean input verified -> Exact copy preserved                      • Input file empty or unreadable
  • Reconstructed file generated (size > 0)                           • Format unknown or unsupported
  • OOXML / PDF Integrity Validation passed                           • File extension mismatch (anti-spoofing)
- • Security Re-analysis found 0 remaining blocking threats           • RTF document submitted (CDR deferred)
+ • Security Re-analysis found 0 remaining blocking threats           • RTF document processed through dedicated RTF CDR
  • Reconstructed nested packages verified safe                       • Parser exception during processing
                                                                      • Reconstruction failed to produce file
                                                                      • Post-CDR integrity validation failed
@@ -499,7 +501,6 @@ When a file is released, [`ReportWriter`](file:///d:/CAIR/DOC%20SHIELD/DocShield
 ```
 cdr/
 ├── pom.xml                        # Maven project descriptor (Java 21, POI 5.2.3, PDFBox 3.0.6, JUnit 5)
-├── run.sh                         # Native Linux/macOS execution launcher
 ├── README.md                      # Master technical documentation (this file)
 ├── scripts/                       # Sandbox launchers
 │   ├── sandbox-run.sh             # Linux / WSL2 Bubblewrap container launcher
@@ -522,7 +523,7 @@ cdr/
     │   │   ├── docx/, pptx/, xlsx/ # Semantic parsers
     │   │   ├── doc/, ppt/, xls/   # Legacy POI parsers & format converters
     │   │   ├── pdf/               # PDFBox semantic parser
-    │   │   └── rtf/               # Lexical RTF parser (CDR deferred)
+    │   │   └── rtf/               # RTF parser + dedicated CDR pipeline
     │   ├── threat/                # Threat analysis subsystem
     │   │   ├── common/            # SecurityFinding, ThreatType (33 types), FindingClassification
     │   │   ├── ooxml/             # Shared OOXMLThreatAnalyzer & OLEAnalyzer
@@ -562,6 +563,7 @@ The DocShield repository contains **51 dedicated test classes** verifying every 
 | **PPTX Pipeline** | `PPTXThreatCoverageTest`, `PPTXSecuritySurfaceTest`, `PPTXThreatSanitizerTest`, `EmbeddedObjectAnalyzerTest`, `Ole10NativeAnalyzerTest`, `OLEAnalyzerTest`, `PayloadFingerprintTest`, `PayloadIdentifierTest`, `RelationshipAnalyzerTest`, `ResourceAnalyzerTest`, `SecurityPolicyTest`, `SVGAnalyzerTest` | Interactive `ppaction://` actions, embedded PE/ELF/Mach-O executables, active SVGs, OLE storages. |
 | **XLSX Pipeline** | `XLSXThreatAnalyzerTest`, `XLSXThreatSanitizerTest`, `XLSXSecuritySurfaceTest`, `XLSXHardeningRegressionTest` | XLM macro sheets, DDE formula pipes, external workbook links, active calculation formulas. |
 | **Legacy Office Conversion** | `LegacyOfficeThreatAnalyzerTest`, `LegacyOfficeConverterTest`, `DOCToDOCXConverterTest` | Pre-conversion analysis, OLE stream inspection, sandboxed LibreOffice execution, cleanup. |
+| **RTF Pipeline** | `RTFThreatAnalyzerTest`, `RTFThreatSanitizerTest`, `RTFCDRProcessorTest`, `RTFIntegrityValidatorTest` | Embedded objects/OLE, Equation Editor indicators, DDE/DDEAUTO, external templates, dangerous URI schemes, reconstruction, SHA clean-copy behavior and post-CDR validation. |
 | **PDF Multi-Pass Pipeline** | `PDFCDRProcessorTest`, `PDFCleanCopySha256Test`, `PDFPass2SecurityTest`, `PDFSecurityPolicyTest`, `PDFSecuritySurfaceVerifierTest`, `PDFStreamThreatInspectorTest`, `PDFThreatSanitizerTest` | Pass 1-3 analysis, JS name trees, embedded attachments, stream decoding, post-CDR surface verification. |
 | **Sandbox & Quarantine** | `SubprocessSandboxTest`, `PathSandboxTest`, `SecureXmlFactoryTest`, `QuarantineManagerTest` | Process timeouts, output size bounds, Zip Slip rejection, XXE entity blocking, quarantine records. |
 | **Result & Error Handling** | `CDRFileUtilTest`, `CDRResultFinalFindingsTest`, `UserFacingErrorTest`, `TestHyperlinkComponent`, `TestTextComponent` | SHA-256 calculation, clean-copy verification, error message formatting. |
@@ -577,18 +579,6 @@ mvn clean compile
 
 # Run all 51 automated test suites
 mvn test
-```
-
-### Direct CLI Execution (`run.sh`)
-```bash
-# Process any supported document
-./run.sh input_file.docx output_sanitized.docx
-./run.sh presentation.pptx output_clean.pptx
-./run.sh workbook.xlsx output_clean.xlsx
-./run.sh document.pdf output_sanitized.pdf
-./run.sh legacy.doc modernized_output.docx
-./run.sh legacy.ppt modernized_output.pptx
-./run.sh legacy.xls modernized_output.xlsx
 ```
 
 ### Linux / WSL Bubblewrap Sandbox (`scripts/sandbox-run.sh`)
@@ -660,7 +650,7 @@ mvn test
 
 ## 29. Known Limitations
 
-- **RTF Scope**: RTF CDR is intentionally deferred and disabled in the current release. RTF files are automatically quarantined to prevent unvalidated passthrough.
+- **RTF Scope**: RTF CDR is integrated through `RTFCDRProcessor`; blocking findings are sanitized/reconstructed and then re-analyzed and integrity-validated. Inputs that cannot be safely released follow the normal quarantine/fail-closed path.
 - **Arbitrary OLE Rewriting**: Legacy OLE storages containing complex proprietary binary streams cannot always be rewritten at the binary stream level; DocShield secures these by disarming the container or converting them via sandboxed LibreOffice into modern OOXML.
 - **External Conversion Dependency**: Processing legacy binary formats (`DOC`, `PPT`, `XLS`) requires LibreOffice to be installed on the host or inside the container sandbox. Modern formats (`DOCX`, `PPTX`, `XLSX`, `PDF`) have zero external tool dependencies and run purely in Java.
 - **Platform Sandbox Isolation Differences**: Native execution on Windows without WSL2 or Docker relies on Java-level process supervision (`SubprocessSandbox`), which provides timeout, output buffer, and memory monitoring, but lacks Linux kernel-level namespace/mount isolation.
