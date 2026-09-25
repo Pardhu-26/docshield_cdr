@@ -14,10 +14,13 @@ public class RTFCDRProcessorTest {
 
     @Test
     void processesAndReconstructsSampleEmbeddedObject() throws Exception {
-        Path input = Path.of("samples/test_embedded_object.rtf");
+        Path input = Files.createTempFile("docshield-embedded-", ".rtf");
         Path output = Files.createTempFile("docshield-clean-object-", ".rtf");
 
         try {
+            Files.writeString(input,
+                    "{\\rtf1\\ansi{\\object\\objemb\\objclass Package{\\*\\objdata 0105000000000000}}}");
+
             CDRResult result = processor.process(input, output);
 
             assertTrue(result.isOutputReady());
@@ -33,16 +36,19 @@ public class RTFCDRProcessorTest {
             assertFalse(outputContent.contains("\\objdata"));
             assertTrue(outputContent.startsWith("{\\rtf"));
         } finally {
+            Files.deleteIfExists(input);
             Files.deleteIfExists(output);
         }
     }
 
     @Test
     void cleanSampleRtfCopiedUnchangedWithSha256Match() throws Exception {
-        Path input = Path.of("samples/file-sample_100kB.rtf");
-        Path output = Files.createTempFile("docshield-clean-copy-", ".rtf");
+        Path input = Files.createTempFile("docshield-clean-copy-", ".rtf");
+        Path output = Files.createTempFile("docshield-clean-copy-output-", ".rtf");
 
         try {
+            Files.writeString(input, "{\\rtf1\\ansi This is a clean DocShield test fixture.}");
+
             CDRResult result = processor.process(input, output);
 
             assertTrue(result.isOutputReady());
@@ -53,6 +59,7 @@ public class RTFCDRProcessorTest {
             assertEquals(result.getInputSha256(), result.getOutputSha256());
             assertEquals(Files.size(input), Files.size(output));
         } finally {
+            Files.deleteIfExists(input);
             Files.deleteIfExists(output);
         }
     }
