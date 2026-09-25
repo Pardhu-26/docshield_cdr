@@ -12,9 +12,14 @@ public class RTFIntegrityValidatorTest {
     private final RTFIntegrityValidator validator = new RTFIntegrityValidator();
 
     @Test
-    void validatesCleanSampleRtf() {
-        Path sample = Path.of("samples/file-sample_100kB.rtf");
-        assertTrue(validator.validate(sample));
+    void validatesCleanSampleRtf() throws Exception {
+        Path temp = Files.createTempFile("docshield-rtf-clean-", ".rtf");
+        try {
+            Files.writeString(temp, "{\\rtf1\\ansi\\deff0 {\\fonttbl {\\f0 Courier;}}\\f0\\fs24 Clean DocShield fixture.\\par}");
+            assertTrue(validator.validate(temp));
+        } finally {
+            Files.deleteIfExists(temp);
+        }
     }
 
     @Test
